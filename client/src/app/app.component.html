@@ -1,0 +1,58 @@
+<div *ngIf="customCSS" [innerHTML]="customCSS"></div>
+
+<my-hotkeys-cheatsheet></my-hotkeys-cheatsheet>
+
+<div class="peertube-container" [ngClass]="{ 'user-logged-in': isUserLoggedIn(), 'user-not-logged-in': !isUserLoggedIn() }">
+  <div class="header">
+
+    <div class="top-left-block">
+      <span class="icon icon-menu" (click)="menu.toggleMenu()"></span>
+
+      <a class="peertube-title" [routerLink]="defaultRoute" title="Homepage" i18n-title>
+        <span class="icon icon-logo"></span>
+        <span class="instance-name">{{ instanceName }}</span>
+      </a>
+    </div>
+
+    <div class="header-right">
+      <my-header class="w-100 d-flex justify-content-end"></my-header>
+    </div>
+  </div>
+
+  <div class="sub-header-container">
+    <my-menu *ngIf="menu.isMenuDisplayed"></my-menu>
+
+    <div id="content" tabindex="-1" class="main-col" [ngClass]="{ expanded: menu.isMenuDisplayed === false }">
+
+      <div class="main-row">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ngx-loading-bar [includeSpinner]="false"></ngx-loading-bar>
+
+<my-confirm></my-confirm>
+
+<p-toast position="bottom-right">
+  <ng-template let-message pTemplate="message">
+    <div class="notification-block">
+      <div class="message">
+        <h3>{{ message.summary }}</h3>
+        <p>{{ message.detail }}</p>
+      </div>
+
+      <span *ngIf="message.severity === 'success'" class="glyphicon glyphicon-ok"></span>
+      <span *ngIf="message.severity === 'info'" class="glyphicon glyphicon-info-sign"></span>
+      <span *ngIf="message.severity === 'error'" class="glyphicon glyphicon-remove"></span>
+    </div>
+  </ng-template>
+</p-toast>
+
+<ng-template [ngIf]="isUserLoggedIn()">
+  <my-welcome-modal #welcomeModal></my-welcome-modal>
+  <my-instance-config-warning-modal #instanceConfigWarningModal></my-instance-config-warning-modal>
+</ng-template>
+
+<my-custom-modal #customModal></my-custom-modal>

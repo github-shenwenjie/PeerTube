@@ -1,0 +1,357 @@
+@import '_variables';
+@import '_mixins';
+
+.menu-wrapper {
+  position: fixed;
+  height: calc(100vh - #{$header-height});
+  padding: 0;
+  width: $menu-width;
+  z-index: z(menu);
+  scrollbar-color: var(--actionButtonColor) var(--menuBackgroundColor);
+}
+
+menu {
+  @include ellipsis;
+
+  background-color: var(--menuBackgroundColor);
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+  color: var(--menuForegroundColor);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &:focus, &:hover {
+    overflow-y: auto;
+  }
+
+  @media not all and (hover: hover) and (pointer: fine) {
+    overflow-y: auto;
+  }
+
+  &.logged-in {
+    .panel-block {
+      margin-bottom: 20px;
+    }
+
+    .block-title {
+      margin-bottom: 15px;
+    }
+  }
+
+  .top-menu {
+    flex-grow: 1;
+    width: $menu-width;
+  }
+
+  .logged-in-block {
+    height: 100px;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+
+    .logged-in-info {
+      @include ellipsis;
+
+      flex-grow: 1;
+
+      .logged-in-display-name {
+        font-size: 16px;
+        font-weight: $font-semibold;
+        color: var(--menuForegroundColor);
+        cursor: pointer;
+
+        @include disable-default-a-behaviour;
+      }
+
+      .logged-in-username {
+        @include ellipsis;
+
+        font-size: 13px;
+        color: #C6C6C6;
+        max-width: 140px;
+        cursor: pointer;
+      }
+    }
+
+    .logged-in-more {
+      margin-right: 20px;
+
+      my-global-icon.dropdown-toggle {
+        cursor: pointer;
+
+        &::after {
+          border: none;
+        }
+
+        ::ng-deep {
+          @include apply-svg-color(var(--menuForegroundColor));
+        }
+      }
+    }
+  }
+
+  .button-block {
+    margin: 30px 25px 35px 25px;
+
+    .login-button {
+      @include peertube-button-link;
+      @include orange-button;
+
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .create-account-button {
+      @include peertube-button-link;
+
+      display: block;
+      width: 100%;
+
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.25);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.28);
+      }
+    }
+  }
+
+  .block-title {
+    text-transform: uppercase;
+    font-weight: $font-bold; // Bold
+    font-size: 13px;
+    margin-bottom: 25px;
+    margin-left: 26px;
+  }
+
+  .panel-block {
+    margin-bottom: 15px;
+
+    a {
+      @include disable-default-a-behaviour;
+
+      display: flex;
+      align-items: center;
+      padding-left: $menu-lateral-padding;
+      color: var(--menuForegroundColor);
+      cursor: pointer;
+      min-height: 40px;
+      font-size: 16px;
+      transition: background-color .1s ease-in-out;
+      white-space: normal;
+      word-break: break-word;
+      padding-right: 20px;
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.15);
+      }
+
+      &:hover, &.focus-visible {
+        background-color: rgba(255, 255, 255, 0.10);
+      }
+
+      my-global-icon {
+        @include apply-svg-color(#808080);
+
+        display: flex;
+        width: 22px;
+        height: 22px;
+        margin-right: 18px;
+
+        &[iconName="playlists"] {
+          height: 24px;
+          width: 24px;
+
+          margin-right: 16px;
+        }
+
+        &[iconName="videos"] {
+          position: relative;
+          right: -1px;
+        }
+      }
+
+      .icon {
+        @include icon(22px);
+
+        margin-right: 18px;
+      }
+    }
+  }
+
+  .footer {
+    width: $menu-width;
+    padding-bottom: 15px;
+
+    .bottom-links {
+      display: flex;
+      flex-direction: column;
+      padding: 0 $menu-lateral-padding;
+    }
+
+    $footer-links-base-opacity: .8;
+
+    .footer-links {
+      &, > div {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      a, span[role=button] {
+        display: inline-block;
+        text-decoration: none;
+        color: var(--mainBackgroundColor);
+        opacity: $footer-links-base-opacity;
+        white-space: nowrap;
+        font-size: 90%;
+        font-weight: 500;
+        line-height: 1.4rem;
+        margin-right: 8px;
+
+        &.inline-global-icon {
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
+          height: 1.4rem;
+
+          my-global-icon {
+            @include apply-svg-color(var(--mainBackgroundColor));
+
+            display: flex;
+            width: auto;
+            height: 90%;
+            margin-right: .2rem;
+          }
+        }
+      }
+    }
+
+    .footer-copyleft small a {
+      @include disable-default-a-behaviour;
+
+      color: var(--mainBackgroundColor);
+      opacity: $footer-links-base-opacity - .2;
+    }
+  }
+}
+
+.dropdown-menu {
+  width: calc(100% + 40px);
+}
+
+.dropdown-item {
+  @include dropdown-with-icon-item;
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  i.glyphicon-menu-right {
+    opacity: .4;
+  }
+
+  my-global-icon {
+    &[iconName="cog"],
+    &[iconName="sign-out"] {
+      position: relative;
+      right: -2px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  my-global-icon.not-displayed {
+    display: none;
+  }
+
+  &:hover {
+    my-global-icon.hover-display-toggle.not-displayed {
+      display: inherit;
+    }
+    my-global-icon.hover-display-toggle {
+      display: none;
+    }
+  }
+}
+
+.more-settings {
+  text-transform: uppercase;
+  font-size: 80%;
+  color: #6c757d;
+}
+
+.icon {
+  @include disable-outline;
+  @include icon(22px);
+  opacity: 0.8;
+
+  &.icon-shortcuts  {
+    position: relative;
+    top: -1px;
+    margin-right: 10px;
+
+    background-image: url('../../assets/images/menu/keyboard.png');
+  }
+}
+
+input[type=checkbox]{
+  position: absolute;
+  visibility: hidden;
+}
+
+label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 35px;
+  height: 20px;
+  background: #cccccc;
+  display: block;
+  border-radius: 100px;
+  position: relative;
+  margin: 0;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    background: var(--mainBackgroundColor);
+    border-radius: 50%;
+    transition: 0.3s ease-out;
+  }
+
+  &:active:after {
+    width: 40px;
+  }
+}
+
+input:checked + label {
+  background: var(--mainColor);
+
+  &:after {
+    left: calc(100% - 3px);
+    transform: translateX(-100%);
+  }
+}
+
+@media screen and (max-width: $mobile-view) {
+  .menu-wrapper {
+    width: 100% !important;
+
+    menu {
+      overflow-y: auto;
+    }
+  }
+
+  .top-menu, .footer {
+    width: 100% !important;
+  }
+}

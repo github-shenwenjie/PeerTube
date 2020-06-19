@@ -1,0 +1,3446 @@
+openapi: 3.0.0
+info:
+  title: PeerTube
+  version: 2.2.0
+  contact:
+    name: PeerTube Community
+    url: 'https://joinpeertube.org'
+  license:
+    name: AGPLv3.0
+    url: 'https://github.com/Chocobozzz/PeerTube/blob/master/LICENSE'
+  x-logo:
+    url: 'https://joinpeertube.org/img/brand.png'
+    altText: PeerTube Project Homepage
+  description: |
+    # Introduction
+
+    The PeerTube API is built on HTTP(S) and is RESTful. You can use your favorite
+    HTTP/REST library for your programming language to use PeerTube. No official
+    SDK is currently provided, but the spec API is fully compatible with
+    [openapi-generator](https://github.com/OpenAPITools/openapi-generator/wiki/API-client-generator-HOWTO)
+    which generates a client SDK in the language of your choice.
+
+    See the [Quick Start guide](https://docs.joinpeertube.org/#/api-rest-getting-started) so you can play with the PeerTube API.
+
+    # Authentication
+
+    When you sign up for an account, you are given the possibility to generate
+    sessions, and authenticate using this session token. One session token can
+    currently be used at a time.
+
+    # Errors
+
+    The API uses standard HTTP status codes to indicate the success or failure
+    of the API call. The body of the response will be JSON in the following
+    format.
+
+    ```
+    {
+      "code": "unauthorized_request", // example inner error code
+      "error": "Token is invalid." // example exposed error message
+    }
+    ```
+externalDocs:
+  url: https://docs.joinpeertube.org/api-rest-reference.html
+tags:
+  - name: Accounts
+    description: >
+      Using some features of PeerTube require authentication, for which Accounts
+      provide different levels of permission as well as associated user
+      information. Accounts also encompass remote accounts discovered across the federation.
+  - name: Config
+    description: >
+      Each server exposes public information regarding supported videos and
+      options.
+  - name: Job
+    description: >
+      Jobs are long-running tasks enqueued and processed by the instance
+      itself. No additional worker registration is currently available.
+  - name: Instance Follows
+    description: >
+      Managing servers which the instance interacts with is crucial to the
+      concept of federation in PeerTube and external video indexation. The PeerTube
+      server then deals with inter-server ActivityPub operations and propagates
+      information across its social graph by posting activities to actors' inbox
+      endpoints.
+  - name: Video Abuses
+    description: |
+      Video abuses deal with reports of local or remote videos alike.
+  - name: Video
+    description: |
+      Operations dealing with listing, uploading, fetching or modifying videos.
+  - name: Search
+    description: |
+      The search helps to find _videos_ from within the instance and beyond.
+      Videos from other instances federated by the instance (that is, instances
+      followed by the instance) can be found via keywords and other criteria of
+      the advanced search.
+  - name: Video Comments
+    description: >
+      Operations dealing with comments to a video. Comments are organized in
+      threads.
+  - name: Video Playlists
+    description: >
+      Operations dealing with playlists of videos. Playlists are bound to users
+      and/or channels.
+  - name: Video Channels
+    description: >
+      Operations dealing with creation, modification and video listing of a
+      user's channels.
+  - name: Video Blacklist
+    description: >
+      Operations dealing with blacklisting videos (removing them from view and
+      preventing interactions).
+  - name: Video Rates
+    description: >
+      Like/dislike a video.
+x-tagGroups:
+  - name: Accounts
+    tags:
+      - Accounts
+      - Users
+      - My User
+      - My Subscriptions
+  - name: Videos
+    tags:
+      - Video
+      - Video Caption
+      - Video Channels
+      - Video Comments
+      - Video Following
+      - Video Rates
+      - Video Playlists
+      - Video Ownership Change
+  - name: Search
+    tags:
+      - Search
+  - name: Moderation
+    tags:
+      - Video Abuses
+      - Video Blacklist
+  - name: Instance Configuration
+    tags:
+      - Config
+      - Instance Follows
+  - name: Jobs
+    tags:
+      - Job
+paths:
+  '/accounts/{name}':
+    get:
+      tags:
+        - Accounts
+      summary: Get an account
+      parameters:
+        - $ref: '#/components/parameters/name'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+  '/accounts/{name}/videos':
+    get:
+      tags:
+        - Accounts
+        - Video
+      summary: 'List videos of an account'
+      parameters:
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/categoryOneOf'
+        - $ref: '#/components/parameters/tagsOneOf'
+        - $ref: '#/components/parameters/tagsAllOf'
+        - $ref: '#/components/parameters/licenceOneOf'
+        - $ref: '#/components/parameters/languageOneOf'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/skipCount'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/videosSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            fetch('https://peertube2.cpy.re/api/v1/accounts/{name}/videos')
+            .then(function(response) {
+              return response.json()
+            }).then(function(data) {
+              console.log(data)
+            })
+        - lang: Shell
+          source: |
+            # pip install httpie
+            http -b GET https://peertube2.cpy.re/api/v1/accounts/{name}/videos
+        - lang: Ruby
+          source: |
+            require 'net/http'
+            require 'json'
+
+            uri = URI.parse("https://peertube2.cpy.re/api/v1/accounts/{name}/videos")
+
+            http = Net::HTTP.new(uri.host, uri.port)
+            http.use_ssl = true
+
+            response = http.get(uri.request_uri)
+
+            puts JSON.parse(response.read_body)
+        - lang: Python
+          source: |
+            import requests
+
+            r = requests.get("https://peertube2.cpy.re/api/v1//accounts/{name}/videos")
+            json = r.json()
+
+            print(json)
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: List accounts
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+  /config:
+    get:
+      tags:
+        - Config
+      summary: Get instance public configuration
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfig'
+  /config/about:
+    get:
+      summary: Get instance "About" information
+      tags:
+        - Config
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfigAbout'
+  /config/custom:
+    get:
+      summary: Get instance runtime configuration
+      tags:
+        - Config
+      security:
+        - OAuth2:
+            - admin
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfigCustom'
+    put:
+      summary: Set instance runtime configuration
+      tags:
+        - Config
+      security:
+        - OAuth2:
+            - admin
+      responses:
+        '200':
+          description: successful operation
+    delete:
+      summary: Delete instance runtime configuration
+      tags:
+        - Config
+      security:
+        - OAuth2:
+            - admin
+      responses:
+        '200':
+          description: successful operation
+  /jobs/{state}:
+    get:
+      summary: List instance jobs
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Job
+      parameters:
+        - name: state
+          in: path
+          required: true
+          description: The state of the job
+          schema:
+            type: string
+            enum:
+              - active
+              - completed
+              - failed
+              - waiting
+              - delayed
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+  '/server/following/{host}':
+    delete:
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Instance Follows
+      summary: Unfollow a server
+      parameters:
+        - name: host
+          in: path
+          required: true
+          description: 'The host to unfollow '
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+  /server/followers:
+    get:
+      tags:
+        - Instance Follows
+      summary: List instance followers
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Follow'
+  /server/following:
+    get:
+      tags:
+        - Instance Follows
+      summary: List instance followings
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Follow'
+    post:
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Instance Follows
+      summary: Follow a server
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Follow'
+  /users:
+    post:
+      summary: Create a user
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Users
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddUserResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddUser'
+        description: User to create
+        required: true
+    get:
+      summary: List users
+      security:
+        - OAuth2: []
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/usersSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  '/users/{id}':
+    delete:
+      summary: Delete a user
+      security:
+        - OAuth2:
+            - admin
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: successful operation
+    get:
+      summary: Get a user
+      security:
+        - OAuth2: []
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Update a user
+      security:
+        - OAuth2: []
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+        required: true
+  /users/register:
+    post:
+      summary: Register a user
+      tags:
+        - Users
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+        required: true
+  /users/me:
+    get:
+      summary: Get my user information
+      security:
+        - OAuth2:
+          - user
+      tags:
+        - My User
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    put:
+      summary: Update my user information
+      security:
+        - OAuth2:
+          - user
+      tags:
+        - My User
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMe'
+        required: true
+  /users/me/videos/imports:
+    get:
+      summary: Get video imports of my user
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - Videos
+        - My User
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoImport'
+  /users/me/video-quota-used:
+    get:
+      summary: Get my user used quota
+      security:
+        - OAuth2:
+          - user
+      tags:
+        - My User
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: number
+  '/users/me/videos/{videoId}/rating':
+    get:
+      summary: Get rate of my user for a video
+      security:
+        - OAuth2: []
+      tags:
+        - My User
+        - Video Rates
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          description: 'The video id '
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMeVideoRating'
+  /users/me/videos:
+    get:
+      summary: Get videos of my user
+      security:
+        - OAuth2:
+          - user
+      tags:
+        - My User
+        - Videos
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+  /users/me/subscriptions:
+    get:
+      summary: Get my user subscriptions
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - My Subscriptions
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+    post:
+      summary: Add subscription to my user
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - My Subscriptions
+      responses:
+        '200':
+          description: successful operation
+  /users/me/subscriptions/exist:
+    get:
+      summary: Get if subscriptions exist for my user
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - My Subscriptions
+      parameters:
+        - $ref: '#/components/parameters/subscriptionsUris'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+  /users/me/subscriptions/videos:
+    get:
+      summary: List videos of subscriptions of my user
+      security:
+        - OAuth2:
+          - user
+      tags:
+        - My Subscriptions
+        - Videos
+      parameters:
+        - $ref: '#/components/parameters/categoryOneOf'
+        - $ref: '#/components/parameters/tagsOneOf'
+        - $ref: '#/components/parameters/tagsAllOf'
+        - $ref: '#/components/parameters/licenceOneOf'
+        - $ref: '#/components/parameters/languageOneOf'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/skipCount'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/videosSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+  '/users/me/subscriptions/{subscriptionHandle}':
+    get:
+      summary: Get subscription of my user
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - My Subscriptions
+      parameters:
+        - $ref: '#/components/parameters/subscriptionHandle'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoChannel'
+    delete:
+      summary: Delete subscription of my user
+      security:
+        - OAuth2:
+            - user
+      tags:
+        - My Subscriptions
+      parameters:
+        - $ref: '#/components/parameters/subscriptionHandle'
+      responses:
+        '200':
+          description: successful operation
+  /users/me/avatar/pick:
+    post:
+      summary: Update my user avatar
+      security:
+        - OAuth2: []
+      tags:
+        - My User
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatarfile:
+                  description: The file to upload.
+                  type: string
+                  format: binary
+            encoding:
+              avatarfile:
+                contentType: image/png, image/jpeg
+  /videos/ownership:
+    get:
+      summary: List video ownership changes
+      tags:
+        - Video Ownership Change
+      security:
+        - OAuth2: []
+      responses:
+        '200':
+          description: successful operation
+  '/videos/ownership/{id}/accept':
+    post:
+      summary: Accept ownership change request
+      tags:
+        - Video Ownership Change
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  '/videos/ownership/{id}/refuse':
+    post:
+      summary: Refuse ownership change request
+      tags:
+        - Video Ownership Change
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  '/videos/{id}/give-ownership':
+    post:
+      summary: Request ownership change
+      tags:
+        - Video Ownership Change
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+              required:
+                - username
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          description: 'Changing video ownership to a remote account is not supported yet'
+  /videos:
+    get:
+      summary: List videos
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/categoryOneOf'
+        - $ref: '#/components/parameters/tagsOneOf'
+        - $ref: '#/components/parameters/tagsAllOf'
+        - $ref: '#/components/parameters/licenceOneOf'
+        - $ref: '#/components/parameters/languageOneOf'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/skipCount'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/videosSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+  /videos/categories:
+    get:
+      summary: List available video categories
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /videos/licences:
+    get:
+      summary: List available video licences
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /videos/languages:
+    get:
+      summary: List available video languages
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /videos/privacies:
+    get:
+      summary: List available video privacies
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  '/videos/{id}':
+    put:
+      summary: Update a video
+      security:
+        - OAuth2: []
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                thumbnailfile:
+                  description: Video thumbnail file
+                  type: string
+                  format: binary
+                previewfile:
+                  description: Video preview file
+                  type: string
+                  format: binary
+                category:
+                  description: Video category
+                  type: string
+                licence:
+                  description: Video licence
+                  type: string
+                language:
+                  description: Video language
+                  type: string
+                privacy:
+                  $ref: '#/components/schemas/VideoPrivacySet'
+                description:
+                  description: Video description
+                  type: string
+                waitTranscoding:
+                  description: Whether or not we wait transcoding before publish the video
+                  type: string
+                support:
+                  description: Text describing how to support the video uploader
+                  type: string
+                nsfw:
+                  description: Whether or not this video contains sensitive content
+                  type: string
+                name:
+                  description: Video name
+                  type: string
+                tags:
+                  description: Video tags (maximum 5 tags each between 2 and 30 characters)
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items:
+                    type: string
+                    minLength: 2
+                    maxLength: 30
+                commentsEnabled:
+                  description: Enable or disable comments for this video
+                  type: string
+                originallyPublishedAt:
+                  description: Date when the content was originally published
+                  type: string
+                  format: date-time
+                scheduleUpdate:
+                  $ref: '#/components/schemas/VideoScheduledUpdate'
+            encoding:
+              thumbnailfile:
+                contentType: image/jpeg
+              previewfile:
+                contentType: image/jpeg
+    get:
+      summary: Get a video
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoDetails'
+    delete:
+      summary: Delete a video
+      security:
+        - OAuth2: []
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  '/videos/{id}/description':
+    get:
+      summary: Get complete video description
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+  '/videos/{id}/views':
+    post:
+      summary: Add a view to a video
+      tags:
+        - Video
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  '/videos/{id}/watching':
+    put:
+      summary: Set watching progress of a video
+      tags:
+        - Video
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWatchingVideo'
+        required: true
+      responses:
+        '204':
+          description: successful operation
+  /videos/upload:
+    post:
+      summary: Upload a video
+      security:
+        - OAuth2: []
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoUploadResponse'
+        '403':
+          description: 'The user video quota is exceeded with this video.'
+        '408':
+          description: 'Upload has timed out'
+        '422':
+          description: 'Invalid input file.'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                videofile:
+                  description: Video file
+                  type: string
+                  format: binary
+                channelId:
+                  description: Channel id that will contain this video
+                  type: number
+                thumbnailfile:
+                  description: Video thumbnail file
+                  type: string
+                  format: binary
+                previewfile:
+                  description: Video preview file
+                  type: string
+                  format: binary
+                privacy:
+                  $ref: '#/components/schemas/VideoPrivacySet'
+                category:
+                  description: Video category
+                  type: string
+                licence:
+                  description: Video licence
+                  type: string
+                language:
+                  description: Video language
+                  type: string
+                description:
+                  description: Video description
+                  type: string
+                waitTranscoding:
+                  description: Whether or not we wait transcoding before publish the video
+                  type: string
+                support:
+                  description: Text describing how to support the video uploader
+                  type: string
+                nsfw:
+                  description: Whether or not this video contains sensitive content
+                  type: string
+                name:
+                  description: Video name
+                  type: string
+                tags:
+                  description: Video tags (maximum 5 tags each between 2 and 30 characters)
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items:
+                    type: string
+                    minLength: 2
+                    maxLength: 30
+                commentsEnabled:
+                  description: Enable or disable comments for this video
+                  type: string
+                originallyPublishedAt:
+                  description: Date when the content was originally published
+                  type: string
+                  format: date-time
+                scheduleUpdate:
+                  $ref: '#/components/schemas/VideoScheduledUpdate'
+              required:
+                - videofile
+                - channelId
+                - name
+            encoding:
+              videofile:
+                contentType: video/mp4, video/webm, video/ogg, video/avi, video/quicktime, video/x-msvideo, video/x-flv, video/x-matroska, application/octet-stream
+              thumbnailfile:
+                contentType: image/jpeg
+              previewfile:
+                contentType: image/jpeg
+      x-code-samples:
+        - lang: Shell
+          source: |
+            ## DEPENDENCIES: httpie, jq
+            # pip install httpie
+            USERNAME="<your_username>"
+            PASSWORD="<your_password>"
+            FILE_PATH="<your_file_path>"
+            CHANNEL_ID="<your_channel_id>"
+            NAME="<video_name>"
+
+            API_PATH="https://peertube2.cpy.re/api/v1"
+            ## AUTH
+            client_id=$(http -b GET "$API_PATH/oauth-clients/local" | jq -r ".client_id")
+            client_secret=$(http -b GET "$API_PATH/oauth-clients/local" | jq -r ".client_secret")
+            token=$(http -b --form POST "$API_PATH/users/token" \
+              client_id="$client_id" client_secret="$client_secret" grant_type=password response_type=code \
+              username=$USERNAME \
+              password=$PASSWORD \
+              | jq -r ".access_token")
+            ## VIDEO UPLOAD
+            http -b --form POST "$API_PATH/videos/upload" \
+              videofile@$FILE_PATH \
+              channelId=$CHANNEL_ID \
+              name=$NAME \
+              "Authorization:Bearer $token"
+  /videos/imports:
+    post:
+      summary: Import a video
+      description: Import a torrent or magnetURI or HTTP resource (if enabled by the instance administrator)
+      security:
+        - OAuth2: []
+      tags:
+        - Video
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoUploadResponse'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                torrentfile:
+                  description: Torrent File
+                  type: string
+                  format: binary
+                targetUrl:
+                  description: HTTP target URL
+                  type: string
+                magnetUri:
+                  description: Magnet URI
+                  type: string
+                channelId:
+                  description: Channel id that will contain this video
+                  type: number
+                thumbnailfile:
+                  description: Video thumbnail file
+                  type: string
+                  format: binary
+                previewfile:
+                  description: Video preview file
+                  type: string
+                  format: binary
+                privacy:
+                  $ref: '#/components/schemas/VideoPrivacySet'
+                category:
+                  description: Video category
+                  type: string
+                licence:
+                  description: Video licence
+                  type: string
+                language:
+                  description: Video language
+                  type: string
+                description:
+                  description: Video description
+                  type: string
+                waitTranscoding:
+                  description: Whether or not we wait transcoding before publish the video
+                  type: string
+                support:
+                  description: Text describing how to support the video uploader
+                  type: string
+                nsfw:
+                  description: Whether or not this video contains sensitive content
+                  type: string
+                name:
+                  description: Video name
+                  type: string
+                tags:
+                  description: Video tags (maximum 5 tags each between 2 and 30 characters)
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items:
+                    type: string
+                    minLength: 2
+                    maxLength: 30
+                commentsEnabled:
+                  description: Enable or disable comments for this video
+                  type: string
+                scheduleUpdate:
+                  $ref: '#/components/schemas/VideoScheduledUpdate'
+              required:
+                - channelId
+                - name
+            encoding:
+              torrentfile:
+                contentType: application/x-bittorrent
+              thumbnailfile:
+                contentType: image/jpeg
+              previewfile:
+                contentType: image/jpeg
+  /videos/abuse:
+    get:
+      summary: List video abuses
+      security:
+        - OAuth2:
+            - admin
+            - moderator
+      tags:
+        - Video Abuses
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/abusesSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoAbuse'
+  '/videos/{id}/abuse':
+    post:
+      summary: Report an abuse
+      security:
+        - OAuth2: []
+      tags:
+        - Video Abuses
+        - Videos
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  description: Reason why the user reports this video
+                  type: string
+      responses:
+        '204':
+          description: successful operation
+  '/videos/{id}/abuse/{abuseId}':
+    put:
+      summary: Update an abuse
+      security:
+        - OAuth2:
+          - admin
+          - moderator
+      tags:
+        - Video Abuses
+      responses:
+        '204':
+          description: successful operation
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/abuseId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  $ref: '#/components/schemas/VideoAbuseStateSet'
+                moderationComment:
+                  type: string
+                  description: 'Update the comment of the video abuse for other admin/moderators'
+    delete:
+      summary: Delete an abuse
+      security:
+        - OAuth2:
+            - admin
+            - moderator
+      tags:
+        - Video Abuses
+      responses:
+        '204':
+          description: successful operation
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/abuseId'
+
+  '/videos/{id}/blacklist':
+    post:
+      summary: Blacklist a video
+      security:
+        - OAuth2:
+            - admin
+            - moderator
+      tags:
+        - Video Blacklist
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+    delete:
+      summary: Delete an entry of the blacklist of a video by its id
+      security:
+        - OAuth2:
+            - admin
+            - moderator
+      tags:
+        - Video Blacklist
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  /videos/blacklist:
+    get:
+      summary: List blacklisted videos
+      security:
+        - OAuth2:
+            - admin
+            - moderator
+      tags:
+        - Video Blacklist
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/blacklistsSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoBlacklist'
+  /videos/{id}/captions:
+    get:
+      summary: List captions of a video
+      tags:
+        - Video Caption
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VideoCaption'
+  /videos/{id}/captions/{captionLanguage}:
+    put:
+      summary: Add or replace a video caption
+      tags:
+        - Video Caption
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/captionLanguage'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                captionfile:
+                  description: The file to upload.
+                  type: string
+                  format: binary
+            encoding:
+              captionfile:
+                contentType: text/vtt, application/x-subrip, text/plain
+      responses:
+        '204':
+          description: successful operation
+    delete:
+      summary: Delete a video caption
+      tags:
+        - Video Caption
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/captionLanguage'
+      responses:
+        '204':
+          description: successful operation
+  /video-channels:
+    get:
+      summary: List video channels
+      tags:
+        - Video Channels
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoChannel'
+    post:
+      summary: Create a video channel
+      security:
+        - OAuth2: []
+      tags:
+        - Video Channels
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoChannelCreate'
+  '/video-channels/{channelHandle}':
+    get:
+      summary: Get a video channel
+      tags:
+        - Video Channels
+      parameters:
+        - $ref: '#/components/parameters/channelHandle'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoChannel'
+    put:
+      summary: Update a video channel
+      security:
+        - OAuth2: []
+      tags:
+        - Video Channels
+      parameters:
+        - $ref: '#/components/parameters/channelHandle'
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoChannelUpdate'
+    delete:
+      summary: Delete a video channel
+      security:
+        - OAuth2: []
+      tags:
+        - Video Channels
+      parameters:
+        - $ref: '#/components/parameters/channelHandle'
+      responses:
+        '204':
+          description: successful operation
+  '/video-channels/{channelHandle}/videos':
+    get:
+      summary: List videos of a video channel
+      tags:
+        - Video
+        - Video Channels
+      parameters:
+        - $ref: '#/components/parameters/channelHandle'
+        - $ref: '#/components/parameters/categoryOneOf'
+        - $ref: '#/components/parameters/tagsOneOf'
+        - $ref: '#/components/parameters/tagsAllOf'
+        - $ref: '#/components/parameters/licenceOneOf'
+        - $ref: '#/components/parameters/languageOneOf'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/skipCount'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/videosSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+
+  /video-playlists/privacies:
+    get:
+      summary: List available playlist privacies
+      tags:
+        - Video Playlists
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /video-playlists:
+    get:
+      summary: List video playlists
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoPlaylist'
+    post:
+      summary: Create a video playlist
+      description: 'If the video playlist is set as public, the videoChannelId is mandatory.'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoPlaylist:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      uuid:
+                        type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  description: Video playlist display name
+                  type: string
+                thumbnailfile:
+                  description: Video playlist thumbnail file
+                  type: string
+                  format: binary
+                privacy:
+                  $ref: '#/components/schemas/VideoPlaylistPrivacySet'
+                description:
+                  description: Video playlist description
+                  type: string
+                videoChannelId:
+                  description: Video channel in which the playlist will be published
+                  type: number
+              required:
+                - displayName
+
+  /video-playlists/{id}:
+    get:
+      summary: Get a video playlist
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoPlaylist'
+    put:
+      summary: Update a video playlist
+      description: 'If the video playlist is set as public, the playlist must have a assigned channel.'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      responses:
+        '204':
+          description: successful operation
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  description: Video playlist display name
+                  type: string
+                thumbnailfile:
+                  description: Video playlist thumbnail file
+                  type: string
+                  format: binary
+                privacy:
+                  $ref: '#/components/schemas/VideoPlaylistPrivacySet'
+                description:
+                  description: Video playlist description
+                  type: string
+                videoChannelId:
+                  description: Video channel in which the playlist will be published
+                  type: number
+    delete:
+      summary: Delete a video playlist
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+
+  /video-playlists/{id}/videos:
+    get:
+      summary: 'List videos of a playlist'
+      tags:
+        - Videos
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+    post:
+      summary: 'Add a video in a playlist'
+      security:
+        - OAuth2: []
+      tags:
+        - Videos
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoPlaylistElement:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                videoId:
+                  type: number
+                  description: 'Video to add in the playlist'
+                startTimestamp:
+                  type: number
+                  description: 'Start the video at this specific timestamp (in seconds)'
+                stopTimestamp:
+                  type: number
+                  description: 'Stop the video at this specific timestamp (in seconds)'
+              required:
+                - videoId
+
+  /video-playlists/{id}/videos/reorder:
+    post:
+      summary: 'Reorder a playlist'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startPosition:
+                  type: number
+                  description: 'Start position of the element to reorder (starts from 1)'
+                insertAfterPosition:
+                  type: number
+                  description: 'New position for the block to reorder (starts from 0, to add the block before the first element)'
+                reorderLength:
+                  type: number
+                  description: 'How many element from startPosition to reorder (minimum length is 1)'
+              required:
+                - startPosition
+                - insertAfterPosition
+
+  /video-playlists/{id}/videos/{playlistElementId}:
+    put:
+      summary: 'Update a playlist element'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/playlistElementId'
+      responses:
+        '204':
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startTimestamp:
+                  type: number
+                  description: 'Start the video at this specific timestamp (in seconds)'
+                stopTimestamp:
+                  type: number
+                  description: 'Stop the video at this specific timestamp (in seconds)'
+    delete:
+      summary: 'Delete an element from a playlist'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/playlistElementId'
+      responses:
+        '204':
+          description: successful operation
+
+  '/users/me/video-playlists/videos-exist':
+    get:
+      summary: 'Check video exists in my playlists'
+      security:
+        - OAuth2: []
+      tags:
+        - Video Playlists
+      parameters:
+        - name: videoIds
+          in: query
+          required: true
+          description: The video ids to check
+          schema:
+            type: array
+            items:
+              type: number
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videoId:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        playlistElementId:
+                          type: number
+                        playlistId:
+                          type: number
+                        startTimestamp:
+                          type: number
+                        stopTimestamp:
+                          type: number
+
+  '/accounts/{name}/video-channels':
+    get:
+      summary: List video channels of an account
+      tags:
+        - Video Channels
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/name'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoChannel'
+  '/accounts/{name}/ratings':
+    get:
+      summary: List ratings of an account
+      security:
+        - OAuth2: []
+      tags:
+        - Accounts
+      parameters:
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/sort'
+        - name: rating
+          in: query
+          required: false
+          description: Optionally filter which ratings to retrieve
+          schema:
+            type: string
+            enum:
+              - like
+              - dislike
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoRating'
+  '/videos/{id}/comment-threads':
+    get:
+      summary: List threads of a video
+      tags:
+        - Video Comments
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/commentsSort'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentThreadResponse'
+    post:
+      summary: Create a thread
+      security:
+        - OAuth2: []
+      tags:
+        - Video Comments
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentThreadPostResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: 'Text comment'
+              required:
+                - text
+
+  '/videos/{id}/comment-threads/{threadId}':
+    get:
+      summary: Get a thread
+      tags:
+        - Video Comments
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/threadId'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoCommentThreadTree'
+  '/videos/{id}/comments/{commentId}':
+    post:
+      summary: Reply to a thread of a video
+      security:
+        - OAuth2: []
+      tags:
+        - Video Comments
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/commentId'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentThreadPostResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: 'Text comment'
+              required:
+                - text
+
+    delete:
+      summary: Delete a comment or a reply
+      security:
+        - OAuth2: []
+      tags:
+        - Video Comments
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+        - $ref: '#/components/parameters/commentId'
+      responses:
+        '204':
+          description: successful operation
+  '/videos/{id}/rate':
+    put:
+      summary: Like/dislike a video
+      security:
+        - OAuth2: []
+      tags:
+        - Video Rates
+      parameters:
+        - $ref: '#/components/parameters/idOrUUID'
+      responses:
+        '204':
+          description: successful operation
+  /search/videos:
+    get:
+      tags:
+        - Search
+      summary: Search videos
+      parameters:
+        - $ref: '#/components/parameters/categoryOneOf'
+        - $ref: '#/components/parameters/tagsOneOf'
+        - $ref: '#/components/parameters/tagsAllOf'
+        - $ref: '#/components/parameters/licenceOneOf'
+        - $ref: '#/components/parameters/languageOneOf'
+        - $ref: '#/components/parameters/nsfw'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/skipCount'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/videosSearchSort'
+        - name: search
+          in: query
+          required: true
+          description: String to search
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoListResponse'
+servers:
+  - url: 'https://peertube.cpy.re/api/v1'
+    description: Live Test Server (live data - stable version)
+  - url: 'https://peertube2.cpy.re/api/v1'
+    description: Live Test Server (live data - latest nighlty version)
+  - url: 'https://peertube3.cpy.re/api/v1'
+    description: Live Test Server (live data - latest RC version)
+components:
+  parameters:
+    start:
+      name: start
+      in: query
+      required: false
+      description: Offset
+      schema:
+        type: number
+    count:
+      name: count
+      in: query
+      required: false
+      description: "Number of items (max: 100)"
+      schema:
+        type: number
+    sort:
+      name: sort
+      in: query
+      required: false
+      description: Sort column (-createdAt for example)
+      schema:
+        type: string
+    videosSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort videos by criteria
+      schema:
+        type: string
+        enum:
+        - -name
+        - -duration
+        - -createdAt
+        - -publishedAt
+        - -views
+        - -likes
+        - -trending
+    videosSearchSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort videos by criteria
+      schema:
+        type: string
+        enum:
+        - -name
+        - -duration
+        - -createdAt
+        - -publishedAt
+        - -views
+        - -likes
+        - -match
+    commentsSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort comments by criteria
+      schema:
+        type: string
+        enum:
+        - -createdAt
+        - -totalReplies
+    blacklistsSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort blacklists by criteria
+      schema:
+        type: string
+        enum:
+        - -id
+        - -name
+        - -duration
+        - -views
+        - -likes
+        - -dislikes
+        - -uuid
+        - -createdAt
+    usersSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort users by criteria
+      schema:
+        type: string
+        enum:
+        - -id
+        - -username
+        - -createdAt
+    abusesSort:
+      name: sort
+      in: query
+      required: false
+      description: Sort abuses by criteria
+      schema:
+        type: string
+        enum:
+        - -id
+        - -createdAt
+        - -state
+    name:
+      name: name
+      in: path
+      required: true
+      description: >-
+        The name of the account (chocobozzz or chocobozzz@peertube.cpy.re for
+        example)
+      schema:
+        type: string
+    id:
+      name: id
+      in: path
+      required: true
+      description: The user id
+      schema:
+        type: number
+    idOrUUID:
+      name: id
+      in: path
+      required: true
+      description: The object id or uuid
+      schema:
+        type: string
+    playlistElementId:
+      name: playlistElementId
+      in: path
+      required: true
+      description: Playlist element id
+      schema:
+        type: number
+    abuseId:
+      name: abuseId
+      in: path
+      required: true
+      description: Video abuse id
+      schema:
+        type: number
+    captionLanguage:
+      name: captionLanguage
+      in: path
+      required: true
+      description: The caption language
+      schema:
+        type: string
+    channelHandle:
+      name: channelHandle
+      in: path
+      required: true
+      description: "The video channel handle (example: 'my_username@example.com' or 'my_username')"
+      schema:
+        type: string
+    subscriptionHandle:
+      name: subscriptionHandle
+      in: path
+      required: true
+      description: "The subscription handle (example: 'my_username@example.com' or 'my_username')"
+      schema:
+        type: string
+    threadId:
+      name: threadId
+      in: path
+      required: true
+      description: The thread id (root comment id)
+      schema:
+        type: number
+    commentId:
+      name: commentId
+      in: path
+      required: true
+      description: The comment id
+      schema:
+        type: number
+    categoryOneOf:
+      name: categoryOneOf
+      in: query
+      required: false
+      description: category id of the video (see /videos/categories)
+      schema:
+        oneOf:
+        - type: number
+        - type: array
+          items:
+            type: number
+      style: form
+      explode: false
+    tagsOneOf:
+      name: tagsOneOf
+      in: query
+      required: false
+      description: tag(s) of the video
+      schema:
+        oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+      style: form
+      explode: false
+    tagsAllOf:
+      name: tagsAllOf
+      in: query
+      required: false
+      description: tag(s) of the video, where all should be present in the video
+      schema:
+        oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+      style: form
+      explode: false
+    languageOneOf:
+      name: languageOneOf
+      in: query
+      required: false
+      description: language id of the video (see /videos/languages). Use _unknown to filter on videos that don't have a video language
+      schema:
+        oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+      style: form
+      explode: false
+    licenceOneOf:
+      name: licenceOneOf
+      in: query
+      required: false
+      description: licence id of the video (see /videos/licences)
+      schema:
+        oneOf:
+        - type: number
+        - type: array
+          items:
+            type: number
+      style: form
+      explode: false
+    skipCount:
+      name: skipCount
+      in: query
+      required: false
+      description: if you don't need the `total` in the response
+      schema:
+        type: string
+        enum:
+          - 'true'
+          - 'false'
+    nsfw:
+      name: nsfw
+      in: query
+      required: false
+      description: whether to include nsfw videos, if any
+      schema:
+        type: string
+        enum:
+        - 'true'
+        - 'false'
+    filter:
+      name: filter
+      in: query
+      required: false
+      description: >
+        Special filters (local for instance) which might require special rights:
+         * `local` - only videos local to the instance
+         * `all-local` - only videos local to the instance, but showing private and unlisted videos (requires Admin privileges)
+      schema:
+        type: string
+        enum:
+        - local
+        - all-local
+    subscriptionsUris:
+      name: uris
+      in: query
+      required: true
+      description: list of uris to check if each is part of the user subscriptions
+      schema:
+        type: array
+        items:
+          type: string
+  securitySchemes:
+    OAuth2:
+      description: >
+        In the header: *Authorization: Bearer <token\>*
+
+
+        Authenticating via OAuth requires the following steps:
+
+
+        - Have an account with sufficient authorization levels
+
+        - [Generate](https://docs.joinpeertube.org/#/api-rest-getting-started) a
+        Bearer Token
+
+        - Make Authenticated Requests
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://peertube.example.com/api/v1/users/token'
+          scopes:
+            admin: Admin scope
+            moderator: Moderator scope
+            user: User scope
+  schemas:
+    VideoConstantNumber:
+      properties:
+        id:
+          type: number
+        label:
+          type: string
+    VideoConstantString:
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+
+    VideoPlaylistPrivacySet:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+      description: 'The video playlist privacy (Public = 1, Unlisted = 2, Private = 3)'
+    VideoPlaylistPrivacyConstant:
+      properties:
+        id:
+          $ref: '#/components/schemas/VideoPlaylistPrivacySet'
+        label:
+          type: string
+
+    VideoPlaylistTypeSet:
+      type: integer
+      enum:
+        - 1
+        - 2
+      description: 'The video playlist type (Regular = 1, Watch Later = 2)'
+    VideoPlaylistTypeConstant:
+      properties:
+        id:
+          $ref: '#/components/schemas/VideoPlaylistTypeSet'
+        label:
+          type: string
+
+    VideoPrivacySet:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+      description: 'The video privacy (Public = 1, Unlisted = 2, Private = 3, Internal = 4)'
+    VideoPrivacyConstant:
+      properties:
+        id:
+          $ref: '#/components/schemas/VideoPrivacySet'
+        label:
+          type: string
+
+    NSFWPolicy:
+      type: string
+      enum:
+        - display
+        - blur
+        - do_not_list
+
+    UserRole:
+      type: number
+      enum:
+        - 0
+        - 1
+        - 2
+      description: 'The user role (Admin = 0, Moderator = 1, User = 2)'
+
+    VideoStateConstant:
+      properties:
+        id:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+          description: 'The video state (Published = 1, to transcode = 2, to import = 3)'
+        label:
+          type: string
+
+    VideoAbuseStateSet:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+      description: 'The video playlist privacy (Pending = 1, Rejected = 2, Accepted = 3)'
+    VideoAbuseStateConstant:
+      properties:
+        id:
+          $ref: '#/components/schemas/VideoAbuseStateSet'
+        label:
+          type: string
+
+    VideoResolutionConstant:
+      properties:
+        id:
+          type: integer
+          description: 'Video resolution (240, 360, 720 ...)'
+        label:
+          type: string
+    VideoScheduledUpdate:
+      properties:
+        privacy:
+          $ref: '#/components/schemas/VideoPrivacySet'
+        updateAt:
+          type: string
+          format: date
+          description: When to update the video
+      required:
+        - updateAt
+    AccountSummary:
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        displayName:
+          type: string
+        url:
+          type: string
+        host:
+          type: string
+        avatar:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Avatar'
+    VideoChannelSummary:
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        displayName:
+          type: string
+        url:
+          type: string
+        host:
+          type: string
+        avatar:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Avatar'
+    PlaylistElement:
+      properties:
+        position:
+          type: number
+        startTimestamp:
+          type: number
+        stopTimestamp:
+          type: number
+        video:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Video'
+    VideoFile:
+      properties:
+        magnetUri:
+          type: string
+        resolution:
+          $ref: '#/components/schemas/VideoResolutionConstant'
+        size:
+          type: number
+          description: 'Video file size in bytes'
+        torrentUrl:
+          type: string
+        torrentDownloadUrl:
+          type: string
+        fileUrl:
+          type: string
+        fileDownloadUrl:
+          type: string
+        fps:
+          type: number
+        metadataUrl:
+          type: string
+    VideoStreamingPlaylists:
+      properties:
+        id:
+          type: number
+        type:
+          type: number
+          enum:
+            - 1
+          description: 'Playlist type (HLS = 1)'
+        playlistUrl:
+          type: string
+        segmentsSha256Url:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoFile'
+        redundancies:
+          type: array
+          items:
+            type: object
+            properties:
+              baseUrl:
+                type: string
+    Video:
+      properties:
+        id:
+          type: number
+        uuid:
+          type: string
+        createdAt:
+          type: string
+        publishedAt:
+          type: string
+        updatedAt:
+          type: string
+        originallyPublishedAt:
+          type: string
+        category:
+          $ref: '#/components/schemas/VideoConstantNumber'
+        licence:
+          $ref: '#/components/schemas/VideoConstantNumber'
+        language:
+          $ref: '#/components/schemas/VideoConstantString'
+        privacy:
+          $ref: '#/components/schemas/VideoPrivacyConstant'
+        description:
+          type: string
+        duration:
+          type: number
+        isLocal:
+          type: boolean
+        name:
+          type: string
+        thumbnailPath:
+          type: string
+        previewPath:
+          type: string
+        embedPath:
+          type: string
+        views:
+          type: number
+        likes:
+          type: number
+        dislikes:
+          type: number
+        nsfw:
+          type: boolean
+        waitTranscoding:
+          type: boolean
+          nullable: true
+        state:
+          $ref: '#/components/schemas/VideoStateConstant'
+        scheduledUpdate:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/VideoScheduledUpdate'
+        blacklisted:
+          nullable: true
+          type: boolean
+        blacklistedReason:
+          nullable: true
+          type: string
+        account:
+          $ref: '#/components/schemas/AccountSummary'
+        channel:
+          $ref: '#/components/schemas/VideoChannelSummary'
+        userHistory:
+          nullable: true
+          type: object
+          properties:
+            currentTime:
+              type: number
+    VideoDetails:
+      allOf:
+        - $ref: '#/components/schemas/Video'
+        - type: object
+          properties:
+            descriptionPath:
+              type: string
+            support:
+              type: string
+            channel:
+              $ref: '#/components/schemas/VideoChannel'
+            account:
+              $ref: '#/components/schemas/Account'
+            tags:
+              type: array
+              items:
+                type: string
+            files:
+              type: array
+              items:
+                $ref: '#/components/schemas/VideoFile'
+            commentsEnabled:
+              type: boolean
+            downloadEnabled:
+              type: boolean
+            trackerUrls:
+              type: array
+              items:
+                type: string
+            streamingPlaylists:
+              type: array
+              items:
+                $ref: '#/components/schemas/VideoStreamingPlaylists'
+    VideoImportStateConstant:
+      properties:
+        id:
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+          description: 'The video import state (Pending = 1, Success = 2, Failed = 3)'
+        label:
+          type: string
+    VideoImport:
+      properties:
+        id:
+          type: number
+        targetUrl:
+          type: string
+        magnetUri:
+          type: string
+        torrentName:
+          type: string
+        state:
+          type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/VideoImportStateConstant'
+            label:
+              type: string
+        error:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        video:
+          $ref: '#/components/schemas/Video'
+    VideoAbuse:
+      properties:
+        id:
+          type: number
+        reason:
+          type: string
+        reporterAccount:
+          $ref: '#/components/schemas/Account'
+        state:
+          $ref: '#/components/schemas/VideoAbuseStateConstant'
+        moderationComment:
+          type: string
+        video:
+          type: object
+          properties:
+            id:
+              type: number
+            name:
+              type: string
+            uuid:
+              type: string
+        createdAt:
+          type: string
+    VideoBlacklist:
+      properties:
+        id:
+          type: number
+        videoId:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+        description:
+          type: string
+        duration:
+          type: number
+        views:
+          type: number
+        likes:
+          type: number
+        dislikes:
+          type: number
+        nsfw:
+          type: boolean
+    VideoChannel:
+      properties:
+        displayName:
+          type: string
+        description:
+          type: string
+        isLocal:
+          type: boolean
+        ownerAccount:
+          type: object
+          properties:
+            id:
+              type: number
+            uuid:
+              type: string
+    VideoPlaylist:
+      properties:
+        id:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        description:
+          type: string
+        uuid:
+          type: string
+        displayName:
+          type: string
+        isLocal:
+          type: boolean
+        videoLength:
+          type: number
+        thumbnailPath:
+          type: string
+        privacy:
+          $ref: '#/components/schemas/VideoPlaylistPrivacyConstant'
+        type:
+          $ref: '#/components/schemas/VideoPlaylistTypeConstant'
+        ownerAccount:
+          $ref: '#/components/schemas/AccountSummary'
+        videoChannel:
+          $ref: '#/components/schemas/VideoChannelSummary'
+    VideoComment:
+      properties:
+        id:
+          type: number
+        url:
+          type: string
+        text:
+          type: string
+        threadId:
+          type: number
+        inReplyToCommentId:
+          type: number
+        videoId:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        totalRepliesFromVideoAuthor:
+          type: number
+        totalReplies:
+          type: number
+        account:
+          $ref: '#/components/schemas/Account'
+    VideoCommentThreadTree:
+      properties:
+        comment:
+          $ref: '#/components/schemas/VideoComment'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoCommentThreadTree'
+    VideoCaption:
+      properties:
+        language:
+          $ref: '#/components/schemas/VideoConstantString'
+        captionPath:
+          type: string
+    Avatar:
+      properties:
+        path:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    Actor:
+      properties:
+        id:
+          type: number
+        url:
+          type: string
+        name:
+          type: string
+        host:
+          type: string
+        followingCount:
+          type: number
+        followersCount:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        avatar:
+          $ref: '#/components/schemas/Avatar'
+    Account:
+      allOf:
+        - $ref: '#/components/schemas/Actor'
+        - properties:
+            userId:
+              type: string
+            displayName:
+              type: string
+            description:
+              type: string
+    User:
+      properties:
+        id:
+          type: number
+        username:
+          type: string
+        email:
+          type: string
+        theme:
+          type: string
+          description: 'Theme enabled by this user'
+        emailVerified:
+          type: boolean
+          description: 'Is email verified?'
+        nsfwPolicy:
+          $ref: '#/components/schemas/NSFWPolicy'
+        webtorrentEnabled:
+          type: boolean
+        autoPlayVideo:
+          type: boolean
+        role:
+          $ref: '#/components/schemas/UserRole'
+        roleLabel:
+          type: string
+          enum:
+            - User
+            - Moderator
+            - Administrator
+        videoQuota:
+          type: number
+        videoQuotaDaily:
+          type: number
+        videosCount:
+          type: number
+        videoAbusesCount:
+          type: number
+        videoAbusesAcceptedCount:
+          type: number
+        videoAbusesCreatedCount:
+          type: number
+        videoCommentsCount:
+          type: number
+        noInstanceConfigWarningModal:
+          type: boolean
+        noWelcomeModal:
+          type: boolean
+        blocked:
+          type: boolean
+        blockedReason:
+          type: string
+        createdAt:
+          type: string
+        account:
+          $ref: '#/components/schemas/Account'
+        videoChannels:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoChannel'
+    UserWatchingVideo:
+      properties:
+        currentTime:
+          type: number
+    ServerConfig:
+      properties:
+        instance:
+          type: object
+          properties:
+            name:
+              type: string
+            shortDescription:
+              type: string
+            defaultClientRoute:
+              type: string
+            isNSFW:
+              type: boolean
+            defaultNSFWPolicy:
+              type: string
+            customizations:
+              type: object
+              properties:
+                javascript:
+                  type: string
+                css:
+                  type: string
+        search:
+          type: object
+          properties:
+            remoteUri:
+              type: object
+              properties:
+                users:
+                  type: boolean
+                anonymous:
+                  type: boolean
+        plugin:
+          type: object
+          properties:
+            registered:
+              type: array
+              items:
+                type: string
+        theme:
+          type: object
+          properties:
+            registered:
+              type: array
+              items:
+                type: string
+        email:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        contactForm:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        serverVersion:
+          type: string
+        serverCommit:
+          type: string
+        signup:
+          type: object
+          properties:
+            allowed:
+              type: boolean
+            allowedForCurrentIP:
+              type: boolean
+            requiresEmailVerification:
+              type: boolean
+        transcoding:
+          type: object
+          properties:
+            hls:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+            webtorrent:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+            enabledResolutions:
+              type: array
+              items:
+                type: number
+        import:
+          type: object
+          properties:
+            videos:
+              type: object
+              properties:
+                http:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                torrent:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+        autoBlacklist:
+          type: object
+          properties:
+            videos:
+              type: object
+              properties:
+                ofUsers:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+        avatar:
+          type: object
+          properties:
+            file:
+              type: object
+              properties:
+                size:
+                  type: object
+                  properties:
+                    max:
+                      type: number
+            extensions:
+              type: array
+              items:
+                type: string
+        video:
+          type: object
+          properties:
+            image:
+              type: object
+              properties:
+                extensions:
+                  type: array
+                  items:
+                    type: string
+                size:
+                  type: object
+                  properties:
+                    max:
+                      type: number
+            file:
+              type: object
+              properties:
+                extensions:
+                  type: array
+                  items:
+                    type: string
+        videoCaption:
+          type: object
+          properties:
+            file:
+              type: object
+              properties:
+                size:
+                  type: object
+                  properties:
+                    max:
+                      type: number
+                extensions:
+                  type: array
+                  items:
+                    type: string
+        user:
+          type: object
+          properties:
+            videoQuota:
+              type: number
+            videoQuotaDaily:
+              type: number
+        trending:
+          type: object
+          properties:
+            videos:
+              type: object
+              properties:
+                intervalDays:
+                  type: number
+        tracker:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        followings:
+          type: object
+          properties:
+            instance:
+              type: object
+              properties:
+                autoFollowIndex:
+                  type: object
+                  properties:
+                    indexUrl:
+                      type: string
+    ServerConfigAbout:
+      properties:
+        instance:
+          type: object
+          properties:
+            name:
+              type: string
+            shortDescription:
+              type: string
+            description:
+              type: string
+            terms:
+              type: string
+    ServerConfigCustom:
+      properties:
+        instance:
+          type: object
+          properties:
+            name:
+              type: string
+            shortDescription:
+              type: string
+            description:
+              type: string
+            terms:
+              type: string
+            defaultClientRoute:
+              type: string
+            isNSFW:
+              type: boolean
+            defaultNSFWPolicy:
+              type: string
+            customizations:
+              type: object
+              properties:
+                javascript:
+                  type: string
+                css:
+                  type: string
+        theme:
+          type: object
+          properties:
+            default:
+              type: string
+        services:
+          type: object
+          properties:
+            twitter:
+              type: object
+              properties:
+                username:
+                  type: string
+                whitelisted:
+                  type: boolean
+        cache:
+          type: object
+          properties:
+            previews:
+              type: object
+              properties:
+                size:
+                  type: number
+            captions:
+              type: object
+              properties:
+                size:
+                  type: number
+        signup:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            limit:
+              type: number
+            requiresEmailVerification:
+              type: boolean
+        admin:
+          type: object
+          properties:
+            email:
+              type: string
+        contactForm:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        user:
+          type: object
+          properties:
+            videoQuota:
+              type: number
+            videoQuotaDaily:
+              type: number
+        transcoding:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            allowAdditionalExtensions:
+              type: boolean
+            allowAudioFiles:
+              type: boolean
+            threads:
+              type: number
+            resolutions:
+              type: object
+              properties:
+                240p:
+                  type: boolean
+                360p:
+                  type: boolean
+                480p:
+                  type: boolean
+                720p:
+                  type: boolean
+                1080p:
+                  type: boolean
+                2160p:
+                  type: boolean
+            hls:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+        import:
+          type: object
+          properties:
+            videos:
+              type: object
+              properties:
+                http:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                torrent:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+        autoBlacklist:
+          type: object
+          properties:
+            videos:
+              type: object
+              properties:
+                ofUsers:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+        followers:
+          type: object
+          properties:
+            instance:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                manualApproval:
+                  type: boolean
+    Follow:
+      properties:
+        id:
+          type: number
+        follower:
+          $ref: '#/components/schemas/Actor'
+        following:
+          $ref: '#/components/schemas/Actor'
+        score:
+          type: number
+        state:
+          type: string
+          enum:
+            - pending
+            - accepted
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    Job:
+      properties:
+        id:
+          type: number
+        state:
+          type: string
+          enum:
+            - pending
+            - processing
+            - error
+            - success
+        category:
+          type: string
+          enum:
+            - transcoding
+            - activitypub-http
+        handlerName:
+          type: string
+        handlerInputData:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    AddUserResponse:
+      properties:
+        id:
+          type: number
+        uuid:
+          type: string
+    VideoUploadResponse:
+      properties:
+        video:
+          type: object
+          properties:
+            id:
+              type: number
+            uuid:
+              type: string
+    CommentThreadResponse:
+      properties:
+        total:
+          type: number
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoComment'
+    CommentThreadPostResponse:
+      properties:
+        comment:
+          $ref: '#/components/schemas/VideoComment'
+    VideoListResponse:
+      properties:
+        total:
+          type: number
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Video'
+    AddUser:
+      properties:
+        username:
+          type: string
+          description: 'The user username '
+        password:
+          type: string
+          description: 'The user password. If the smtp server is configured, you can leave empty and an email will be sent '
+        email:
+          type: string
+          description: 'The user email '
+        videoQuota:
+          type: string
+          description: 'The user videoQuota '
+        videoQuotaDaily:
+          type: string
+          description: 'The user daily video quota '
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required:
+        - username
+        - password
+        - email
+        - videoQuota
+        - videoQuotaDaily
+        - role
+    UpdateUser:
+      properties:
+        id:
+          type: string
+          description: 'The user id '
+        email:
+          type: string
+          description: 'The updated email of the user '
+        videoQuota:
+          type: string
+          description: 'The updated videoQuota of the user '
+        videoQuotaDaily:
+          type: string
+          description: 'The updated daily video quota of the user '
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required:
+        - id
+        - email
+        - videoQuota
+        - videoQuotaDaily
+        - role
+    UpdateMe:
+      properties:
+        password:
+          type: string
+          description: 'Your new password '
+        email:
+          type: string
+          description: 'Your new email '
+        displayNSFW:
+          type: string
+          description: 'Your new displayNSFW '
+        autoPlayVideo:
+          type: string
+          description: 'Your new autoPlayVideo '
+      required:
+        - password
+        - email
+        - displayNSFW
+        - autoPlayVideo
+    GetMeVideoRating:
+      properties:
+        id:
+          type: string
+          description: 'Id of the video '
+        rating:
+          type: number
+          description: 'Rating of the video '
+      required:
+        - id
+        - rating
+    VideoRating:
+      properties:
+        video:
+          $ref: '#/components/schemas/Video'
+        rating:
+          type: number
+          description: 'Rating of the video'
+      required:
+        - video
+        - rating
+    RegisterUser:
+      properties:
+        username:
+          type: string
+          description: 'The username of the user '
+        password:
+          type: string
+          description: 'The password of the user '
+        email:
+          type: string
+          description: 'The email of the user '
+        displayName:
+          type: string
+          description: 'The user display name'
+        channel:
+          type: object
+          properties:
+            name:
+              type: string
+              description: 'The default channel name'
+            displayName:
+              type: string
+              description: 'The default channel display name'
+
+      required:
+        - username
+        - password
+        - email
+    VideoChannelCreate:
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        support:
+          type: string
+      required:
+        - name
+        - displayName
+    VideoChannelUpdate:
+      properties:
+        displayName:
+          type: string
+        description:
+          type: string
+        support:
+          type: string
+        bulkVideosSupportUpdate:
+          type: boolean
+          description: 'Update all videos support field of this channel'
+

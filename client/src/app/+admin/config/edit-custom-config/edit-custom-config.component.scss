@@ -1,0 +1,79 @@
+@import '_variables';
+@import '_mixins';
+
+$form-base-input-width: 340px;
+
+label {
+  font-weight: $font-regular;
+  font-size: 100%;
+}
+
+form {
+  padding-bottom: 1.5rem;
+}
+
+input[type=text] {
+  @include peertube-input-text($form-base-input-width);
+  display: block;
+}
+
+input[type=number] {
+  @include peertube-input-text(315px);
+  display: block;
+}
+
+input[type=checkbox] {
+  @include peertube-checkbox(1px);
+}
+
+.peertube-select-container {
+  @include peertube-select-container($form-base-input-width);
+}
+
+input[type=submit] {
+  @include peertube-button;
+  @include orange-button;
+
+  display: flex;
+  margin-left: auto;
+
+  & + .form-error {
+    display: inline;
+    margin-left: 5px;
+  }
+}
+
+.inner-form-title {
+  @include settings-big-title;
+}
+
+textarea {
+  @include peertube-textarea(500px, 150px);
+
+  max-width: 100%;
+  display: block;
+
+  &.small {
+    height: 75px;
+  }
+}
+
+.label-small-info {
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.disabled-checkbox-extra {
+  opacity: .5;
+  pointer-events: none;
+}
+
+.form-group-right {
+  padding-top: 2px;
+}
+
+ngb-tabset:not(.previews) ::ng-deep {
+  .nav-link {
+    font-size: 105%;
+  }
+}

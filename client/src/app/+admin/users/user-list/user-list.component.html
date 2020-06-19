@@ -1,0 +1,128 @@
+<div class="admin-sub-header">
+  <div i18n class="form-sub-title">Users list</div>
+
+  <a class="add-button" routerLink="/admin/users/create">
+    <my-global-icon iconName="add"></my-global-icon>
+    <ng-container i18n>Create user</ng-container>
+  </a>
+</div>
+
+<p-table
+  [value]="users" [lazy]="true" [paginator]="totalRecords > 0" [totalRecords]="totalRecords" [rows]="rowsPerPage" [rowsPerPageOptions]="rowsPerPageOptions"
+  [sortField]="sort.field" [sortOrder]="sort.order" (onLazyLoad)="loadLazy($event)" dataKey="id" [resizableColumns]="true"
+  [(selection)]="selectedUsers"
+  [showCurrentPageReport]="true" i18n-currentPageReportTemplate
+  currentPageReportTemplate="Showing {{'{first}'}} to {{'{last}'}} of {{'{totalRecords}'}} users"
+  (onPage)="onPage($event)" [expandedRowKeys]="expandedRows"
+>
+  <ng-template pTemplate="caption">
+    <div class="caption">
+      <div>
+        <my-action-dropdown
+          *ngIf="isInSelectionMode()" i18n-label label="Batch actions" theme="orange"
+          [actions]="bulkUserActions" [entry]="selectedUsers"
+        >
+        </my-action-dropdown>
+      </div>
+
+      <div class="has-feedback has-clear">
+        <input
+          type="text" name="table-filter" id="table-filter" i18n-placeholder placeholder="Filter..."
+          (keyup)="onSearch($event)"
+        >
+        <a class="glyphicon glyphicon-remove-sign form-control-feedback form-control-clear" (click)="resetSearch()"></a>
+        <span class="sr-only" i18n>Clear filters</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 40px">
+        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+      </th>
+      <th style="width: 40px"></th>
+      <th pResizableColumn i18n pSortableColumn="username">Username <p-sortIcon field="username"></p-sortIcon></th>
+      <th i18n>Email</th>
+      <th style="width: 140px;" i18n pSortableColumn="videoQuotaUsed">Video quota <p-sortIcon field="videoQuotaUsed"></p-sortIcon></th>
+      <th style="width: 120px;" i18n>Role</th>
+      <th style="width: 140px;" pResizableColumn i18n>Auth plugin</th>
+      <th style="width: 150px;" i18n pSortableColumn="createdAt">Created <p-sortIcon field="createdAt"></p-sortIcon></th>
+      <th style="width: 50px;"></th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-expanded="expanded" let-user>
+
+    <tr [pSelectableRow]="user" [ngClass]="{ banned: user.blocked }">
+      <td>
+        <p-tableCheckbox [value]="user"></p-tableCheckbox>
+      </td>
+
+      <td class="expand-cell">
+        <span *ngIf="user.blockedReason" class="expander" [pRowToggler]="user">
+          <i [ngClass]="expanded ? 'glyphicon glyphicon-menu-down' : 'glyphicon glyphicon-menu-right'"></i>
+        </span>
+      </td>
+
+      <td>
+        <a i18n-title title="Open account in a new tab" target="_blank" rel="noopener noreferrer" [routerLink]="[ '/accounts/' + user.username ]">
+          <div class="chip two-lines">
+            <img
+              class="avatar"
+              [src]="user?.account?.avatar?.path"
+              (error)="switchToDefaultAvatar($event)"
+              alt="Avatar"
+            >
+            <div>
+              {{ user.account.displayName }}
+              <span class="text-muted">{{ user.username }}</span>
+            </div>
+          </div>
+          <span i18n *ngIf="user.blocked" class="banned-info">(banned)</span>
+        </a>
+      </td>
+
+      <td *ngIf="!requiresEmailVerification || user.blocked; else emailWithVerificationStatus" [title]="user.email">{{ user.email }}</td>
+
+      <ng-template #emailWithVerificationStatus>
+        <td *ngIf="user.emailVerified === false; else emailVerifiedNotFalse" i18n-title title="User's email must be verified to login">
+          <em>? {{ user.email }}</em>
+        </td>
+        <ng-template #emailVerifiedNotFalse>
+          <td i18n-title title="User's email is verified / User can login without email verification">
+            &#x2713; {{ user.email }}
+          </td>
+        </ng-template>
+      </ng-template>
+
+      <td>{{ user.videoQuotaUsed }} / {{ user.videoQuota }}</td>
+      <td>{{ user.roleLabel }}</td>
+
+      <td>
+        <ng-container *ngIf="user.pluginAuth">{{ user.pluginAuth }}</ng-container>
+      </td>
+
+      <td [title]="user.createdAt">{{ user.createdAt | date: 'short' }}</td>
+
+      <td class="action-cell">
+        <my-user-moderation-dropdown
+          *ngIf="!isInSelectionMode()"
+          [user]="user" container="body" (userChanged)="onUserChanged()" (userDeleted)="onUserChanged()"
+        >
+        </my-user-moderation-dropdown>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="rowexpansion" let-user>
+    <tr class="user-blocked-reason">
+      <td colspan="7">
+        <span i18n class="ban-reason-label">Ban reason:</span>
+        {{ user.blockedReason }}
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<my-user-ban-modal #userBanModal (userBanned)="onUserChanged()"></my-user-ban-modal>
